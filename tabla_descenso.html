@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Escenarios de Descenso</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #1e3c72;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 25px;
+            font-size: 14px;
+        }
+        
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 15px;
+            border-radius: 8px;
+            background: #f5f5f5;
+        }
+        
+        .legend-color {
+            width: 25px;
+            height: 25px;
+            border-radius: 4px;
+            border: 2px solid #ddd;
+        }
+        
+        .filters {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .filter-btn {
+            padding: 10px 20px;
+            border: 2px solid #1e3c72;
+            background: white;
+            color: #1e3c72;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        
+        .filter-btn:hover {
+            background: #1e3c72;
+            color: white;
+        }
+        
+        .filter-btn.active {
+            background: #1e3c72;
+            color: white;
+        }
+        
+        .table-container {
+            overflow-x: auto;
+            border-radius: 10px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        
+        th {
+            background: #1e3c72;
+            color: white;
+            padding: 12px 8px;
+            text-align: center;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        td {
+            padding: 10px 8px;
+            text-align: center;
+            border: 1px solid #e0e0e0;
+            font-weight: 600;
+        }
+        
+        tr:hover {
+            background: #f0f7ff !important;
+        }
+        
+        .gana { background-color: #90EE90; }
+        .empata { background-color: #FFFF99; }
+        .pierde { background-color: #FFB6C1; }
+        
+        .resultado-colon { background-color: #FFE6E6; color: #c41e3a; }
+        .resultado-union { background-color: #FFF9E6; color: #d4860f; }
+        .resultado-gimnasia { background-color: #E6F3FF; color: #1e5a8e; }
+        .resultado-sarmiento { background-color: #E8F5E8; color: #2d7a2d; }
+        .resultado-velez { background-color: #F0E6FF; color: #6a1b9a; }
+        .resultado-multiple { background-color: #FFE0B2; color: #d84315; font-size: 11px; }
+        
+        @media (max-width: 768px) {
+            .container { padding: 15px; }
+            h1 { font-size: 22px; }
+            table { font-size: 11px; }
+            td, th { padding: 6px 4px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚽ Tabla de Escenarios de Descenso</h1>
+        <p class="subtitle">Análisis completo de todas las combinaciones posibles</p>
+        
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color gana"></div>
+                <span>Gana</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color empata"></div>
+                <span>Empata</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color pierde"></div>
+                <span>Pierde</span>
+            </div>
+        </div>
+        
+        <div class="filters">
+            <button class="filter-btn active" onclick="filtrar('todos')">Todos</button>
+            <button class="filter-btn" onclick="filtrar('Gimnasia')">Gimnasia</button>
+            <button class="filter-btn" onclick="filtrar('Unión')">Unión</button>
+            <button class="filter-btn" onclick="filtrar('Sarmiento')">Sarmiento</button>
+            <button class="filter-btn" onclick="filtrar('Vélez')">Vélez</button>
+            <button class="filter-btn" onclick="filtrar('Colón')">Colón</button>
+        </div>
+        
+        <div class="table-container">
+            <table id="tablaDescenso">
+                <thead>
+                    <tr>
+                        <th>Gimnasia</th>
+                        <th>Unión</th>
+                        <th>Sarmiento</th>
+                        <th>Vélez</th>
+                        <th>Colón</th>
+                        <th>⬇️ DESCIENDE</th>
+                    </tr>
+                </thead>
+                <tbody id="tablaBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <script>
+        const datos = [
+            ["Gana", "Gana", "Gana", "Gana", "Pierde", "Colón"],
+            ["Gana", "Gana", "Gana", "Empata", "Empata", "Colón-Unión"],
+            ["Gana", "Gana", "Gana", "Pierde", "Gana", "Vélez-Unión"],
+            ["Gana", "Gana", "Empata", "Gana", "Pierde", "Colón"],
+            ["Gana", "Gana", "Empata", "Empata", "Empata", "Colón-Unión"],
+            ["Gana", "Gana", "Empata", "Pierde", "Gana", "Vélez-Unión"],
+            ["Gana", "Gana", "Pierde", "Gana", "Pierde", "Colón"],
+            ["Gana", "Gana", "Pierde", "Empata", "Empata", "Sarmiento-Colón-Unión"],
+            ["Gana", "Gana", "Pierde", "Pierde", "Gana", "Vélez-Sarmiento-Unión"],
+            ["Gana", "Empata", "Gana", "Gana", "Pierde", "Unión"],
+            ["Gana", "Empata", "Gana", "Empata", "Empata", "Unión"],
+            ["Gana", "Empata", "Gana", "Pierde", "Gana", "Unión"],
+            ["Gana", "Empata", "Empata", "Gana", "Pierde", "Unión"],
+            ["Gana", "Empata", "Empata", "Empata", "Empata", "Unión"],
+            ["Gana", "Empata", "Empata", "Pierde", "Gana", "Unión"],
+            ["Gana", "Empata", "Pierde", "Gana", "Pierde", "Unión"],
+            ["Gana", "Empata", "Pierde", "Empata", "Empata", "Unión"],
+            ["Gana", "Empata", "Pierde", "Pierde", "Gana", "Unión"],
+            ["Gana", "Pierde", "Gana", "Gana", "Pierde", "Unión"],
+            ["Gana", "Pierde", "Gana", "Empata", "Empata", "Unión"],
+            ["Gana", "Pierde", "Gana", "Pierde", "Gana", "Unión"],
+            ["Gana", "Pierde", "Empata", "Gana", "Pierde", "Unión"],
+            ["Gana", "Pierde", "Empata", "Empata", "Empata", "Unión"],
+            ["Gana", "Pierde", "Empata", "Pierde", "Gana", "Unión"],
+            ["Gana", "Pierde", "Pierde", "Gana", "Pierde", "Unión"],
+            ["Gana", "Pierde", "Pierde", "Empata", "Empata", "Unión"],
+            ["Gana", "Pierde", "Pierde", "Pierde", "Gana", "Unión"],
+            ["Empata", "Gana", "Gana", "Gana", "Pierde", "Colón"],
+            ["Empata", "Gana", "Gana", "Empata", "Empata", "Colón-Unión-Gimnasia"],
+            ["Empata", "Gana", "Gana", "Pierde", "Gana", "Vélez-Unión-Gimnasia"],
+            ["Empata", "Gana", "Empata", "Gana", "Pierde", "Colón"],
+            ["Empata", "Gana", "Empata", "Empata", "Empata", "Colón-Unión-Gimnasia"],
+            ["Empata", "Gana", "Empata", "Pierde", "Gana", "Vélez-Unión-Gimnasia"],
+            ["Empata", "Gana", "Pierde", "Gana", "Pierde", "Colón"],
+            ["Empata", "Gana", "Pierde", "Empata", "Empata", "Sarmiento-Colón-Unión-Gimnasia"],
+            ["Empata", "Gana", "Pierde", "Pierde", "Gana", "Vélez-Sarmiento-Unión-Gimnasia"],
+            ["Empata", "Empata", "Gana", "Gana", "Pierde", "Unión"],
+            ["Empata", "Empata", "Gana", "Empata", "Empata", "Unión"],
+            ["Empata", "Empata", "Gana", "Pierde", "Gana", "Unión"],
+            ["Empata", "Empata", "Empata", "Gana", "Pierde", "Unión"],
+            ["Empata", "Empata", "Empata", "Empata", "Empata", "Unión"],
+            ["Empata", "Empata", "Empata", "Pierde", "Gana", "Unión"],
+            ["Empata", "Empata", "Pierde", "Gana", "Pierde", "Unión"],
+            ["Empata", "Empata", "Pierde", "Empata", "Empata", "Unión"],
+            ["Empata", "Empata", "Pierde", "Pierde", "Gana", "Unión"],
+            ["Empata", "Pierde", "Gana", "Gana", "Pierde", "Unión"],
+            ["Empata", "Pierde", "Gana", "Empata", "Empata", "Unión"],
+            ["Empata", "Pierde", "Gana", "Pierde", "Gana", "Unión"],
+            ["Empata", "Pierde", "Empata", "Gana", "Pierde", "Unión"],
+            ["Empata", "Pierde", "Empata", "Empata", "Empata", "Unión"],
+            ["Empata", "Pierde", "Empata", "Pierde", "Gana", "Unión"],
+            ["Empata", "Pierde", "Pierde", "Gana", "Pierde", "Unión"],
+            ["Empata", "Pierde", "Pierde", "Empata", "Empata", "Unión"],
+            ["Empata", "Pierde", "Pierde", "Pierde", "Gana", "Unión"],
+            ["Pierde", "Gana", "Gana", "Gana", "Pierde", "Colón-Gimnasia"],
+            ["Pierde", "Gana", "Gana", "Empata", "Empata", "Gimnasia"],
+            ["Pierde", "Gana", "Gana", "Pierde", "Gana", "Gimnasia"],
+            ["Pierde", "Gana", "Empata", "Gana", "Pierde", "Colón-Gimnasia"],
+            ["Pierde", "Gana", "Empata", "Empata", "Empata", "Gimnasia"],
+            ["Pierde", "Gana", "Empata", "Pierde", "Gana", "Gimnasia"],
+            ["Pierde", "Gana", "Pierde", "Gana", "Pierde", "Colón-Gimnasia"],
+            ["Pierde", "Gana", "Pierde", "Empata", "Empata", "Gimnasia"],
+            ["Pierde", "Gana", "Pierde", "Pierde", "Gana", "Gimnasia"],
+            ["Pierde", "Empata", "Gana", "Gana", "Pierde", "Unión"],
+            ["Pierde", "Empata", "Gana", "Empata", "Empata", "Unión"],
+            ["Pierde", "Empata", "Gana", "Pierde", "Gana", "Unión"],
+            ["Pierde", "Empata", "Empata", "Gana", "Pierde", "Unión"],
+            ["Pierde", "Empata", "Empata", "Empata", "Empata", "Unión"],
+            ["Pierde", "Empata", "Empata", "Pierde", "Gana", "Unión"],
+            ["Pierde", "Empata", "Pierde", "Gana", "Pierde", "Unión"],
+            ["Pierde", "Empata", "Pierde", "Empata", "Empata", "Unión"],
+            ["Pierde", "Empata", "Pierde", "Pierde", "Gana", "Unión"],
+            ["Pierde", "Pierde", "Gana", "Gana", "Pierde", "Unión"],
+            ["Pierde", "Pierde", "Gana", "Empata", "Empata", "Unión"],
+            ["Pierde", "Pierde", "Gana", "Pierde", "Gana", "Unión"],
+            ["Pierde", "Pierde", "Empata", "Gana", "Pierde", "Unión"],
+            ["Pierde", "Pierde", "Empata", "Empata", "Empata", "Unión"],
+            ["Pierde", "Pierde", "Empata", "Pierde", "Gana", "Unión"],
+            ["Pierde", "Pierde", "Pierde", "Gana", "Pierde", "Unión"],
+            ["Pierde", "Pierde", "Pierde", "Empata", "Empata", "Unión"],
+            ["Pierde", "Pierde", "Pierde", "Pierde", "Gana", "Unión"]
+        ];
+        
+        let filasFiltradas = [...datos];
+        
+        function obtenerClaseResultado(resultado) {
+            const equipos = resultado.split('-');
+            if (equipos.length === 1) {
+                return 'resultado-' + equipos[0].toLowerCase();
+            }
+            return 'resultado-multiple';
+        }
+        
+        function obtenerClaseEquipo(resultado) {
+            if (resultado === "Gana") return "gana";
+            if (resultado === "Empata") return "empata";
+            if (resultado === "Pierde") return "pierde";
+            return "";
+        }
+        
+        function renderizarTabla() {
+            const tbody = document.getElementById('tablaBody');
+            tbody.innerHTML = '';
+            
+            filasFiltradas.forEach(fila => {
+                const tr = document.createElement('tr');
+                fila.forEach((celda, idx) => {
+                    const td = document.createElement('td');
+                    td.textContent = celda;
+                    
+                    if (idx < 5) {
+                        td.className = obtenerClaseEquipo(celda);
+                    } else {
+                        td.className = obtenerClaseResultado(celda);
+                    }
+                    
+                    tr.appendChild(td);
+                });
+                tbody.appendChild(tr);
+            });
+        }
+        
+        function filtrar(equipo) {
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            if (equipo === 'todos') {
+                filasFiltradas = [...datos];
+            } else {
+                filasFiltradas = datos.filter(fila => fila[5].includes(equipo));
+            }
+            
+            renderizarTabla();
+        }
+        
+        renderizarTabla();
+    </script>
+</body>
+</html>
